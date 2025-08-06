@@ -1,6 +1,11 @@
 // netlify/functions/summarise.js
 require('dotenv').config({path : '../../.env'});
 const axios = require('axios');
+ const headers = {
+    'Access-Control-Allow-Origin': '*', // 🔓 You can restrict this to specific domains if needed
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
 // ✅ Debug: check if env is loaded
 console.log("🔑 API KEY FROM ENV:", process.env.OPENROUTER_API_KEY);
 exports.handler = async function (event) {
