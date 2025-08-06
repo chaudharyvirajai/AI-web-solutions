@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Summarizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+    }
+
+    #summary {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-left: 5px solid #444;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>AI Text Summarizer</h1>
+  <textarea id="inputText" placeholder="Paste your long article here..."></textarea>
+  <br />
+  <button onclick="summarise()">Summarise</button>
+  <div id="summary"></div>
+
+  <script>
+    async function summarise() {
+      const text = document.getElementById('inputText').value.trim();
+      const output = document.getElementById('summary');
+      output.innerHTML = "⏳ Summarizing...";
+
+      if (!text) {
+        output.innerHTML = "⚠️ Please enter some text to summarize.";
+        return;
+      }
+
+      try {
+        const res = await fetch('/.netlify/functions/summarise', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.summary) {
+          output.innerHTML = `<strong>Summary:</strong> ${data.summary}`;
+        } else {
+          console.warn("⚠️ Unexpected API response:", data);
+          output.innerHTML = "❌ No summary returned.";
+        }
+      } catch (err) {
+        console.error("❌ Fetch error:", err);
+        output.innerHTML = "❌ Error summarizing.";
+      }
+    }
+  </script>
+
+</body>
+
+</html>
