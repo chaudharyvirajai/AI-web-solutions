@@ -1,48 +1,44 @@
 // netlify/functions/summarise.js
-require('dotenv').config({path : '../../.env'});
 const axios = require('axios');
-   const headers = {
+require('dotenv').config({path : '../../.env'});
+
+exports.handler = async function (event) {
+  const headers = {
     'Access-Control-Allow-Origin': '*', // ✅ Allow all origins
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
-// ✅ Debug: check if env is loaded
-console.log("🔑 API KEY FROM ENV:", process.env.OPENROUTER_API_KEY);
-exports.handler = async function (event) {
-      console.log("📤 Running summarise function");
-  console.log("🔑 API KEY:", process.env.OPENROUTER_API_KEY); // <--- here
-  const apiKey = process.env.OPENROUTER_API_KEY;
 
-  if (!apiKey) {
+  // ✅ CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'OPENROUTER_API_KEY missing in env' }),
+      statusCode: 200,
+      headers,
+      body: 'OK',
     };
   }
 
+  // ✅ Reject anything other than POST
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: JSON.stringify({ error: 'Only POST allowed' }),
+      headers,
+      body: JSON.stringify({ error: 'Only POST method is allowed' }),
     };
   }
 
   const { text } = JSON.parse(event.body || '{}');
+  const apiKey = process.env.OPENROUTER_API_KEY;
 
-  if (!text) {
+  if (!text || !apiKey) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Missing text' }),
+      headers,
+      body: JSON.stringify({ error: 'Missing required data' }),
     };
   }
 
-  const prompt = `
-Summarize the following article in around 10 words. Keep the summary clear, informative, and suitable for someone looking to understand the key points quickly:
-
-"""
-${text}
-"""
-`;
+  const prompt = `Summarize in 10-15 words:\n\n${text}`;
 
   try {
     const response = await axios.post(
@@ -50,7 +46,6 @@ ${text}
       {
         model: 'openai/gpt-4.1-mini',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 500,
       },
       {
         headers: {
@@ -64,13 +59,15 @@ ${text}
 
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify({ summary }),
     };
-  } catch (err) {
-    console.error(err.response?.data || err.message);
+  } catch (error) {
+    console.error('Error:', error.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'AI summarization failed' }),
+      headers,
+      body: JSON.stringify({ error: 'Failed to generate summary' }),
     };
   }
 };
