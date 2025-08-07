@@ -63,7 +63,7 @@ ${text}
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'openai/gpt-4.1-mini',
+        model:"openai/gpt-oss-20b:free",
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
       },
