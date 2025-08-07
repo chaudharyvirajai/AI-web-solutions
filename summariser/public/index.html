@@ -50,7 +50,8 @@
       }
 
       try {
-        const res = await fetch('/.netlify/functions/summarise', {
+        // const res = await fetch('/.netlify/functions/summarise', {
+        const res = await fetch('https://ai-web-solutions.netlify.app/.netlify/functions/summarise', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text })
