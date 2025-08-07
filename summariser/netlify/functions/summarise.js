@@ -1,29 +1,43 @@
 // netlify/functions/summarise.js
-require('dotenv').config({path : '../../.env'});
+require('dotenv').config({ path: '../../.env' });
 const axios = require('axios');
-   const headers = {
-    'Access-Control-Allow-Origin': '*', // ✅ Allow all origins
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
-// ✅ Debug: check if env is loaded
-console.log("🔑 API KEY FROM ENV:", process.env.OPENROUTER_API_KEY);
+
+const headers = {
+  'Access-Control-Allow-Origin': '*', // ✅ Allow all origins
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 exports.handler = async function (event) {
-      console.log("📤 Running summarise function");
-  console.log("🔑 API KEY:", process.env.OPENROUTER_API_KEY); // <--- here
+  console.log("📤 Running summarise function");
+  console.log("🔑 API KEY:", process.env.OPENROUTER_API_KEY);
+
   const apiKey = process.env.OPENROUTER_API_KEY;
 
-  if (!apiKey) {
+  // ✅ Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'OPENROUTER_API_KEY missing in env' }),
+      statusCode: 200,
+      headers,
+      body: 'OK',
     };
   }
 
+  // ✅ Reject non-POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Only POST allowed' }),
+    };
+  }
+
+  // ✅ Check API key
+  if (!apiKey) {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'OPENROUTER_API_KEY missing in env' }),
     };
   }
 
@@ -32,6 +46,7 @@ exports.handler = async function (event) {
   if (!text) {
     return {
       statusCode: 400,
+      headers,
       body: JSON.stringify({ error: 'Missing text' }),
     };
   }
@@ -64,12 +79,14 @@ ${text}
 
     return {
       statusCode: 200,
+      headers, // ✅ Include CORS headers here too
       body: JSON.stringify({ summary }),
     };
   } catch (err) {
     console.error(err.response?.data || err.message);
     return {
       statusCode: 500,
+      headers, // ✅ Include CORS headers here too
       body: JSON.stringify({ error: 'AI summarization failed' }),
     };
   }
